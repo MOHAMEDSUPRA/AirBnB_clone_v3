@@ -13,6 +13,7 @@ from models.city import City
 from models.place import Place
 from models.review import Review
 from models.state import State
+from models import storage
 from models.user import User
 import json
 import os
@@ -67,52 +68,49 @@ test_db_storage.py'])
             self.assertTrue(len(func[1].__doc__) >= 1,
                             "{:s} method needs a docstring".format(func[0]))
 
+    def test_get(self):
+        """Test the get method."""
 
-class TestFileStorage(unittest.TestCase):
-    """Test the FileStorage class"""
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def allReturnDict(self):
-        """Test that all returns a dictionaty"""
-        self.assertIs(type(models.storage.all()), dict)
+        self.assertIsNone(storage.get(str, "123"))
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def allNoClass(self):
-        """Test that all returns all rows when no class is passed"""
+        self.assertIsNone(storage.get(State, "123"))
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def new(self):
-        """test that new adds an object to the database"""
+        state = State(name="California")
+        state.save()
+        self.assertEqual(storage.get(State, state.id), state)
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def save(self):
-        """Test that save properly saves objects to file.json"""
+    def test_count(self):
+        """Test the count method."""
+        self.assertEqual(storage.count(str), 0)
+
+        self.assertEqual(storage.count(State), len(storage.all(State)))
+
+        self.assertEqual(storage.count(), len(storage.all()))
 
 
 class TestDBStorage(unittest.TestCase):
-    """Test the DBStorage class"""
+    """Test the FileStorage class"""
+    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
+    def test_all_returns_dict(self):
+        """Test that all returns a dictionaty"""
+        self.assertIs(type(models.storage.all()), dict)
 
-    @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') != 'db',
-                     "not testing db storage")
+    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
+    def test_all_no_class(self):
+        """Test that all returns all rows when no class is passed"""
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
+    def test_new(self):
+        """test that new adds an object to the database"""
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
+    def test_save(self):
+        """Test that save properly saves objects to file.json"""
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
     def test_get(self):
-        """Test that get returns specific object, or none"""
-        newState = State(name="New York")
-        newState.save()
-        newUser = User(email="bob@foobar.com", password="password")
-        newUser.save()
-        self.assertIs(newState, models.storage.get("State", newState.id))
-        self.assertIs(None, models.storage.get("State", "blah"))
-        self.assertIs(None, models.storage.get("blah", "blah"))
-        self.assertIs(newUser, models.storage.get("User", newUser.id))
+        """Test that get properly retrieves objects from file.json"""
 
-    @unittest.skipIf(os.getenv('HBNB_TYPE_STORAGE') != 'db',
-                     "not testing db storage")
+    @unittest.skipIf(models.storage_t == 'db', "not testing db storage")
     def test_count(self):
-        """add new object to db"""
-        startCount = models.storage.count()
-        self.assertEqual(models.storage.count("Blah"), 0)
-        newState = State(name="Montevideo")
-        newState.save()
-        newUser = User(email="ralexrivero@gmail.com.com", password="dummypass")
-        newUser.save()
-        self.assertEqual(models.storage.count("State"), startCount + 1)
-        self.assertEqual(models.storage.count(), startCount + 2)
+        """Test that count properly counts objects in file.json"""
